@@ -36,16 +36,21 @@ def callback():
 def handle_message(event):
     user_text = event.message.text
 
+   try:
     response = client.chat.completions.create(
-        model = "gpt-3.5-turbo",
-        messages = [
-            {"role":"system","content":"あなたはフレンドリーなアシスタント"},
-            {"role":"user","content":user_text}
-        
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "あなたはフレンドリーなアシスタント"},
+            {"role": "user", "content": user_text}
         ]
     )
 
     ai_reply = response.choices[0].message.content
+
+except Exception as e:
+    print("OpenAI API Error:", e)
+    ai_reply = "ごめんなさい、今はAIが使えません。少し時間を置いてもう一度試してください。"
+
     
     line_bot_api.reply_message(
         event.reply_token,
