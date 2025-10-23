@@ -2,15 +2,21 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from openai import OpenAI
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
+load_dotenv()
 
 # あなたのLINEチャネル情報を入れてください
-LINE_CHANNEL_ACCESS_TOKEN = 'PScoiVPg444zmlwxHhFKTsuj9TDPvn29Fx8+xAFJM8trbKUtDFE8GkTAaQZ7hzdwRbs0XMZycY/9K/zJXgyQQiGzg5WtHv19LK6GpnUF/s8b0G6KWnS5iqQ0/bIkFTVt3XRONe+KYNAef2Q14vWhYQdB04t89/1O/w1cDnyilFU='
-LINE_CHANNEL_SECRET = '55eeed31b958afb87727ba5829771123'
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -24,27 +30,28 @@ def callback():
 
     return 'OK'
 
-last_char = ''
+
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    global last_char
-    user_msg = event.message.text.strip()
+    user_text = event.message.text
 
-    if last_char and user_msg[0] != last_char:
-        reply_text = "違うよ"
-    else:
-        if user_msg[-1] == 'ん':
-            reply_text = "あなたの負け"
-            last_char = ''
-        else:
-            reply_text = f"{user_msg[-1]}あ"
-            last_char = reply_text[-1]
+    response = client.chat.completions.create(
+        model = "gpt-3.5-turbo",
+        messages = [
+            {"role":"system","content":"あなたはフレンドリーなアシスタント"},
+            {"role":"user","content":user_text}
+        
+        ]
+    )
+
+    ai_reply = response.choices[0].message.content
     
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text = reply_text)
+        TextSendMessage(text=ai_reply)
     )
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=10000)
