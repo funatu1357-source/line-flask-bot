@@ -26,10 +26,19 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    reply_text = f"あなたが送ったメッセージ: {event.message.text}"
+    user_msg = event.message.text
+
+    if user_msg == 'グー':
+        reply_text = 'パー'
+    elif user_msg == 'チョキ':
+        reply_text = 'グー'
+    elif user_msg == 'パー':
+        reply_text = 'チョキ'
+    else:
+        reply_text =f"ごめんねじゃんけんしよ"
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=reply_text)
+        TextSendMessage(text = reply_text)
     )
 
 if __name__ == "__main__":
