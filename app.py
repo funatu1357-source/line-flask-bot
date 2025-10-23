@@ -24,18 +24,23 @@ def callback():
 
     return 'OK'
 
+last_char = ''
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_msg = event.message.text
+    global last_char
+    user_msg = event.message.text.strip()
 
-    if user_msg == 'グー':
-        reply_text = 'パー'
-    elif user_msg == 'チョキ':
-        reply_text = 'グー'
-    elif user_msg == 'パー':
-        reply_text = 'チョキ'
+    if last_char and user_msg[0] != last_char:
+        reply_text = "違うよ"
     else:
-        reply_text =f"ごめんねじゃんけんしよ"
+        if user_msg[-1] == 'ん':
+            reply_text = "あなたの負け"
+            last_char = ''
+        else:
+            reply_text = f"{user_msg[-1]}あ"
+            last_char = reply_text[-1]
+    
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text = reply_text)
